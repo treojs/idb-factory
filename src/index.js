@@ -6,11 +6,11 @@
  *
  * @param {String} dbName
  * @param {Number} [version]
- * @param {Function} [upgradeneeded]
+ * @param {Function} [upgradeCallback]
  * @return {Promise}
  */
 
-export function open(dbName, version, upgradeneeded) {
+export function open(dbName, version, upgradeCallback) {
   return new Promise((resolve, reject) => {
     let isFirst = true
     const openDb = () => {
@@ -24,7 +24,7 @@ export function open(dbName, version, upgradeneeded) {
           reject(new Error('database is blocked'))
         }
       }
-      if (typeof upgradeneeded === 'function') req.onupgradeneeded = upgradeneeded
+      if (typeof upgradeCallback === 'function') req.onupgradeneeded = upgradeCallback
       req.onerror = (e) => reject(e.target.error)
       req.onsuccess = (e) => resolve(e.target.result)
     }
@@ -74,7 +74,6 @@ export function del(db) {
  * For consistency with official API.
  */
 
-export const deleteDatabase = del
 export function cmp(...args) {
   return idb().cmp(...args)
 }
@@ -87,7 +86,7 @@ export function cmp(...args) {
  *   https://bugs.webkit.org/show_bug.cgi?id=137034
  * - it fallbacks to all possibly available implementations
  *   https://github.com/axemclion/IndexedDBShim#ios
- * - also getter allows to have dynamic link,
+ * - function allows to have dynamic link,
  *   which can be changed after module's initial exectution
  *
  * @return {IDBFactory}
@@ -96,8 +95,8 @@ export function cmp(...args) {
 function idb() {
   return global.forceIndexedDB
       || global.indexedDB
-      || global.mozIndexedDB
       || global.webkitIndexedDB
+      || global.mozIndexedDB
       || global.msIndexedDB
       || global.shimIndexedDB
 }

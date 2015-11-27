@@ -1,7 +1,7 @@
 import 'indexeddbshim'
 import ES6Promise from 'es6-promise'
 import { expect } from 'chai'
-import { open, del } from '../src'
+import { open, del, cmp } from '../src'
 import * as idbFactory from '../src'
 
 describe('idb-factory', () => {
@@ -12,12 +12,12 @@ describe('idb-factory', () => {
 
   it('exposes IDBFactory like API', () => {
     expect(idbFactory.open).a('function')
-    expect(idbFactory.deleteDatabase).a('function')
+    expect(idbFactory.del).a('function')
     expect(idbFactory.cmp).a('function')
   })
 
   it('opens new db', () => {
-    return open(dbName, 4, upgradeneeded).then((db) => {
+    return open(dbName, 4, upgradeCallback).then((db) => {
       expect(db.version).equal(4)
       expect([].slice.call(db.objectStoreNames)).eql(['books'])
       return del(db)
@@ -25,7 +25,7 @@ describe('idb-factory', () => {
   })
 
   it('opens existing db', () => {
-    return open(dbName, 3, upgradeneeded).then((db1) => {
+    return open(dbName, 3, upgradeCallback).then((db1) => {
       return open(dbName).then((db2) => {
         expect(db1.version).equal(db2.version)
         db1.close()
@@ -35,7 +35,12 @@ describe('idb-factory', () => {
     })
   })
 
-  function upgradeneeded(e) {
+  it('compares 2 values', () => {
+    expect(cmp(1, 5)).equal(-1)
+    expect(cmp('z', 'a')).equal(1)
+  })
+
+  function upgradeCallback(e) {
     const books = e.target.result.createObjectStore('books', { keyPath: 'id' })
     books.createIndex('byTitle', 'title', { unique: true })
     books.createIndex('byAuthor', 'author')
