@@ -15,7 +15,7 @@ export function open(dbName, version, upgradeneeded) {
     let isFirst = true
     const openDb = () => {
       // don't call open with 2 arguments, when version is not set
-      const req = version ? idb().open(dbName, version) : idb.open(dbName)
+      const req = version ? idb().open(dbName, version) : idb().open(dbName)
       req.onblocked = () => {
         if (isFirst) {
           isFirst = false
@@ -43,7 +43,7 @@ export function open(dbName, version, upgradeneeded) {
  */
 
 export function del(db) {
-  const dbName = typeof db !== 'string' ? dbName.name : db
+  const dbName = typeof db !== 'string' ? db.name : db
 
   return new Promise((resolve, reject) => {
     let isFirst = true
