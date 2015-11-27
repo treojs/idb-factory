@@ -10,8 +10,7 @@
 
 This module provides consistent, modern API to `window.indexedDB`.
 It's especially useful for test environment, when you need to open/delete database multiple times.
-
-For implementation details check [well documented 100 lines of the source](./src/index.js).
+For implementation details check [just 100 lines of the source](./src/index.js).
 
 ## Example
 
@@ -34,7 +33,7 @@ function upgradeCallback(e) {
 
 ## API
 
-`open` and `del` returns `Promise` and handles `blocked` event, by repeating operation after 100ms.
+`open` and `del` return `Promise` and handle `blocked` event by repeating operation after 100ms.
 
 ### open(dbName, [version], [upgradeCallback])
 
@@ -51,24 +50,6 @@ const db1 = async open('mydb1', 1, (e) => {
 
 // version and upgradeCallback are optional.
 const db2 = async open('mydb2')
-```
-
-You can combine it with [idb-schema](https://github.com/treojs/idb-schema) and have a pretty good deal.
-
-```js
-import { open } from 'idb-factory'
-import Schema from 'idb-schema'
-
-const schema = new Schema()
-.version(1)
-  .addStore('books', { key: 'isbn' })
-  .addIndex('byTitle', 'title', { unique: true })
-.version(2)
-  .addStore('magazines')
-  .addIndex('byPublisher', 'publisher')
-  .addIndex('byFrequency', 'frequency')
-
-const db = async open('mydb', schema.version(), schema.callback())  
 ```
 
 ### del(db)
@@ -103,7 +84,7 @@ console.assert(cmp([1], [1]) === 0)
 
 ### global.forceIndexedDB
 
-It is a specially global variable, which you can define to prior `global.indexedDB`.
+It is a special global variable, which can be defined to prior `global.indexedDB`.
 
 ```js
 function idb() {
