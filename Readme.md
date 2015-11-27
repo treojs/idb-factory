@@ -8,10 +8,10 @@
 [![](https://img.shields.io/travis/treojs/idb-factory.svg)](https://travis-ci.org/treojs/idb-factory)
 [![](http://img.shields.io/npm/dm/idb-factory.svg)](https://npmjs.org/package/idb-factory)
 
-This module provides consistent, modern API to `window.indexedDB`,
+This module provides consistent, modern API to `window.indexedDB`.
 It's especially useful for test environment, when you need to open/delete database multiple times.
 
-For implementation details check [well documented 100 lines of the source]('./src/index.js').
+For implementation details check [well documented 100 lines of the source](./src/index.js).
 
 ## Example
 
@@ -41,7 +41,7 @@ function upgradeCallback(e) {
 ```js
 import { open } from 'idb-factory'
 
-// open "mydb1" on version 1, and create store and index
+// open "mydb1" v1, and create store and index
 const db1 = async open('mydb1', 1, (e) => {
   if (e.oldVersion < 1) {
     const store = e.target.result.createObjectStore('books', { keyPath: 'isbn' })
@@ -93,10 +93,10 @@ async deleteDatabase('mydb') // delete database by name
 
 ### cmp(val1, val2)
 
-Compare 2 values, using IndexedDB's [comparison algorithm](http://www.w3.org/TR/IndexedDB).
-
 ```js
 import { cmp } from 'idb-factory'
+
+// Compare 2 values, using IndexedDB's comparison algorithm
 console.assert(cmp('z', 'a') === 1)
 console.assert(cmp([1], [1]) === 0)
 ```
