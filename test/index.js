@@ -38,6 +38,7 @@ describe('idb-factory', () => {
   it('compares 2 values', () => {
     expect(cmp(1, 5)).equal(-1)
     expect(cmp('z', 'a')).equal(1)
+    expect(cmp([0], [0])).equal(0)
   })
 
   function upgradeCallback(e) {

@@ -71,11 +71,16 @@ export function del(db) {
 }
 
 /**
- * For consistency with official API.
+ * Compare `first` and `second`.
+ * Added for consistency with official API.
+ *
+ * @param {Any} first
+ * @param {Any} second
+ * @return {Number} -1|0|1
  */
 
-export function cmp(...args) {
-  return idb().cmp(...args)
+export function cmp(first, second) {
+  return idb().cmp(first, second)
 }
 
 /**
