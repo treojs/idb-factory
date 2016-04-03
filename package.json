@@ -1,7 +1,13 @@
 {
   "name": "idb-factory",
   "description": "Better window.indexedDB",
-  "repository": "treojs/idb-factory",
+  "repository": "https://github.com/treojs/idb-factory",
+  "bugs": "https://github.com/treojs/idb-factory/issues",
+  "homepage": "https://github.com/treojs/idb-factory",
+  "author": "treojs",
+  "contributors": [
+    "Brett Zamir"
+  ],
   "version": "1.0.0",
   "license": "MIT",
   "main": "lib/index.js",
@@ -14,12 +20,16 @@
     "treo",
     "idb"
   ],
+  "engines": {
+    "node": "*"
+  },
   "scripts": {
     "prepublish": "babel src --out-dir lib",
     "test:local": "eslint src/ test/ && browserify-test -t babelify",
     "test": "npm run test:local && SAUCE_USERNAME=idb-factory zuul --tunnel-host http://treojs.com --no-coverage -- test/index.js",
     "development": "browserify-test -t babelify --watch"
   },
+  "dependencies": {},
   "devDependencies": {
     "babel-cli": "6.1.18",
     "babel-core": "6.1.18",
