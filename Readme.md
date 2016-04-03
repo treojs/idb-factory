@@ -52,6 +52,12 @@ const db1 = async open('mydb1', 1, (e) => {
 const db2 = async open('mydb2')
 ```
 
+`open` is also the default so can also be imported with:
+
+```js
+import open from 'idb-factory'
+```
+
 ### del(db)
 
 ```js
