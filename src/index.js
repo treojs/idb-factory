@@ -36,6 +36,8 @@ export function open(dbName, version, upgradeCallback) {
   })
 }
 
+export { open as default }
+
 /**
  * Delete `db` properly:
  * - close it and wait 100ms to disk flush (Safari, older Chrome, Firefox)
