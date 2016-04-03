@@ -1,0 +1,9 @@
+{
+  "plugins": {
+    "lint": {
+        "list-item-spacing": false,
+        "list-item-indent": "space",
+        "code-block-style": "consistent"
+    }
+  }
+}

@@ -9,8 +9,10 @@
 [![](http://img.shields.io/npm/dm/idb-factory.svg)](https://npmjs.org/package/idb-factory)
 
 This module provides consistent, modern API to `window.indexedDB`.
-It's especially useful for test environment, when you need to open/delete database multiple times.
-For implementation details check [just 100 lines of the source](./src/index.js).
+It's especially useful for testing environments when you need to open/delete
+a database multiple times.
+
+For implementation details check its [mere 100 lines of source](./src/index.js).
 
 ## Example
 
@@ -33,9 +35,10 @@ function upgradeCallback(e) {
 
 ## API
 
-`open` and `del` return `Promise` and handle `blocked` event by repeating operation after 100ms.
+`open` and `del` return `Promise` and handle `blocked` event by repeating
+operation after 100ms.
 
-### open(dbName, [version], [upgradeCallback])
+### open(dbName, \[version], \[upgradeCallback])
 
 ```js
 import { open } from 'idb-factory'
@@ -84,7 +87,8 @@ console.assert(cmp([1], [1]) === 0)
 
 ### global.forceIndexedDB
 
-It is a special global variable, which can be defined to prior `global.indexedDB`.
+It is a special global variable, which can be defined to prior
+`global.indexedDB`.
 
 ```js
 function idb() {
@@ -97,8 +101,9 @@ function idb() {
 }
 ```
 
-For example, due to [WebKit bug](https://bugs.webkit.org/show_bug.cgi?id=137034) you can't rewrite
-`window.indexedDB`, but Safari 8 implementation is [really buggy](https://gist.github.com/nolanlawson/08eb857c6b17a30c1b26),
+For example, due to [WebKit bug](https://bugs.webkit.org/show_bug.cgi?id=137034)
+you can't rewrite `window.indexedDB`, but Safari 8 implementation is
+[really buggy](https://gist.github.com/nolanlawson/08eb857c6b17a30c1b26),
 so you'd like to use [shim and fallback to WebSQL](https://github.com/axemclion/IndexedDBShim).
 
 ```js
