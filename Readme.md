@@ -163,6 +163,31 @@ try {
 }
 ```
 
+### Blocking events
+
+Genuine `blocked` events (as with errors) can be caught, and `blocked` event
+objects will also be assigned a custom `resume` property promise which can be
+used similarly to the original `open` (or `del`) call (upon successful closing
+of all other open connections).
+
+```js
+import { del as deleteDatabase } from 'idb-factory'
+try {
+  async deleteDatabase('mydb') // delete database by name
+} catch (err) {
+  if (err.type !== 'blocked') {
+    // Handle other `err` errors here
+    return
+  }
+  closeOpenConnections()
+  try {
+    async err.resume
+  } catch (err) {
+    // Handle errors upon resumption
+  }
+}
+```
+
 ## LICENSE
 
 [MIT](./LICENSE)
