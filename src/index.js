@@ -16,40 +16,50 @@ export function open(dbName, version, upgradeCallback) {
       upgradeCallback = version
       version = undefined
     }
-    // don't call open with 2 arguments, when version is not set
-    const req = version ? idb().open(dbName, version) : idb().open(dbName)
-    req.onblocked = (e) => {
-      const resume = new Promise((res, rej) => {
-        // We overwrite handlers rather than make a new
-        //   open() since the original request is still
-        //   open and its onsuccess will still fire if
-        //   the user unblocks by closing the blocking
-        //   connection
-        req.onsuccess = (ev) => res(ev.target.result)
-        req.onerror = (ev) => {
-          ev.preventDefault()
-          rej(ev)
+
+    let isFirst = true
+    const openDb = () => {
+      // don't call open with 2 arguments, when version is not set
+      const req = version ? idb().open(dbName, version) : idb().open(dbName)
+      req.onblocked = (e) => {
+        if (isFirst) {
+          isFirst = false
+          setTimeout(openDb, 100)
+          return
         }
-      })
-      e.resume = resume
-      reject(e)
-    }
-    if (typeof upgradeCallback === 'function') {
-      req.onupgradeneeded = (e) => {
-        upgradeCallback(e)
+        const resume = new Promise((res, rej) => {
+          // We overwrite handlers rather than make a new
+          //   open() since the original request is still
+          //   open and its onsuccess will still fire if
+          //   the user unblocks by closing the blocking
+          //   connection
+          req.onsuccess = ev => res(ev.target.result)
+          req.onerror = ev => {
+            ev.preventDefault()
+            rej(ev)
+          }
+        })
+        e.resume = resume
+        reject(e)
+      }
+      if (typeof upgradeCallback === 'function') {
+        req.onupgradeneeded = e => {
+          upgradeCallback(e)
+        }
+      }
+      req.onerror = (e) => {
+        // Prevent default for `BadVersion` and `AbortError` errors, etc.
+        // These are not necessarily reported in console in Chrome but present; see
+        //  https://bugzilla.mozilla.org/show_bug.cgi?id=872873
+        //  http://stackoverflow.com/questions/36225779/aborterror-within-indexeddb-upgradeneeded-event/36266502
+        e.preventDefault()
+        reject(e)
+      }
+      req.onsuccess = (e) => {
+        resolve(e.target.result)
       }
     }
-    req.onerror = (e) => {
-      // Prevent default for `BadVersion` and `AbortError` errors, etc.
-      // These are not necessarily reported in console in Chrome but present; see
-      //  https://bugzilla.mozilla.org/show_bug.cgi?id=872873
-      //  http://stackoverflow.com/questions/36225779/aborterror-within-indexeddb-upgradeneeded-event/36266502
-      e.preventDefault()
-      reject(e)
-    }
-    req.onsuccess = (e) => {
-      resolve(e.target.result)
-    }
+    openDb()
   })
 }
 
@@ -67,9 +77,15 @@ export function del(db) {
   const dbName = typeof db !== 'string' ? db.name : db
 
   return new Promise((resolve, reject) => {
+    let isFirst = true
     const delDb = () => {
       const req = idb().deleteDatabase(dbName)
       req.onblocked = (e) => {
+        if (isFirst) {
+          isFirst = false
+          setTimeout(delDb, 100)
+          return
+        }
         // The following addresses part of https://bugzilla.mozilla.org/show_bug.cgi?id=1220279
         e = e.newVersion === null || typeof Proxy === 'undefined' ? e : new Proxy(e, { get: (target, name) => {
           return name === 'newVersion' ? null : target[name]
@@ -89,7 +105,6 @@ export function del(db) {
             if (!('oldVersion' in ev)) {
               ev.oldVersion = e.oldVersion
             }
-
             res(ev)
           }
           req.onerror = (ev) => {
