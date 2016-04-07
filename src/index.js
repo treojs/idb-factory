@@ -13,6 +13,9 @@
 export function open(dbName, version, upgradeCallback) {
   return new Promise((resolve, reject) => {
     let isFirst = true
+    if (typeof version === 'function') {
+      upgradeCallback = version
+    }
     const openDb = () => {
       // don't call open with 2 arguments, when version is not set
       const req = version ? idb().open(dbName, version) : idb().open(dbName)
