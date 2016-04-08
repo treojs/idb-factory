@@ -16,7 +16,8 @@
   ],
   "scripts": {
     "prepublish": "babel src --out-dir lib",
-    "test": "eslint src/ test/ && browserify-test -t babelify && SAUCE_USERNAME=idb-factory zuul --tunnel-host http://treojs.com --no-coverage -- test/index.js",
+    "test:local": "eslint src/ test/ && browserify-test -t babelify",
+    "test": "npm run test:local && SAUCE_USERNAME=idb-factory zuul --tunnel-host http://treojs.com --no-coverage -- test/index.js",
     "development": "browserify-test -t babelify --watch"
   },
   "devDependencies": {
