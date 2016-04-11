@@ -15,6 +15,7 @@ export function open(dbName, version, upgradeCallback) {
     let isFirst = true
     if (typeof version === 'function') {
       upgradeCallback = version
+      version = undefined
     }
     const openDb = () => {
       // don't call open with 2 arguments, when version is not set
