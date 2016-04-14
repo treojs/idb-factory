@@ -51,6 +51,14 @@ describe('idb-factory', function idbFactoryTests() {
     expect(cmp('z', 'a')).equal(1)
   })
 
+  it('allows the upgradeneeded callback to throw its own error and be caught', () => {
+    return open(dbName, 3, function upgradeneeded(/* e */) {
+      throw new Error('Bad callback')
+    }).catch((err) => {
+      expect(err.message).equal('Bad callback')
+    })
+  })
+
   it('resumes from a genuine blocked event via resume property on open', () => {
     let caught = false
     return open(dbName, 3, upgradeCallback).then((db1) => {

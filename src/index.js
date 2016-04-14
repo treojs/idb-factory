@@ -36,7 +36,13 @@ export function open(dbName, version, upgradeCallback) {
     }
     if (typeof upgradeCallback === 'function') {
       req.onupgradeneeded = (e) => {
-        upgradeCallback(e)
+        try {
+          upgradeCallback(e)
+        } catch (err) {
+          // We allow the callback to throw its own error
+          e.target.result.close()
+          reject(err)
+        }
       }
     }
     req.onerror = (e) => {

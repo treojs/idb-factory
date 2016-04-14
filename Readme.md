@@ -57,6 +57,17 @@ const db2 = await open('mydb2')
 })();
 ```
 
+Note that if `upgradeCallback` throws, its own error will be catchable
+by the `open()` promise chain:
+
+```js
+return open('mydb1', 1, function upgradeneeded(/* e */) {
+  throw new Error('Bad callback')
+}).catch((err) => {
+  console.log(err.message) // 'Bad callback'
+})
+```
+
 ### del(db)
 
 ```js
