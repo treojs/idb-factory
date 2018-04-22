@@ -12,25 +12,52 @@
 
 export function open(dbName, version, upgradeCallback) {
   return new Promise((resolve, reject) => {
-    let isFirst = true
     if (typeof version === 'function') {
       upgradeCallback = version
       version = undefined
     }
+
+    let isFirst = true
     const openDb = () => {
       // don't call open with 2 arguments, when version is not set
       const req = version ? idb().open(dbName, version) : idb().open(dbName)
-      req.onblocked = () => {
+      req.onblocked = (e) => {
         if (isFirst) {
           isFirst = false
           setTimeout(openDb, 100)
-        } else {
-          reject(new Error('database is blocked'))
+          return
+        }
+        const resume = new Promise((res, rej) => {
+          // We overwrite handlers rather than make a new
+          //   open() since the original request is still
+          //   open and its onsuccess will still fire if
+          //   the user unblocks by closing the blocking
+          //   connection
+          req.onsuccess = ev => res(ev.target.result)
+          req.onerror = ev => {
+            ev.preventDefault()
+            rej(ev)
+          }
+        })
+        e.resume = resume
+        reject(e)
+      }
+      if (typeof upgradeCallback === 'function') {
+        req.onupgradeneeded = e => {
+          upgradeCallback(e)
         }
       }
-      if (typeof upgradeCallback === 'function') req.onupgradeneeded = upgradeCallback
-      req.onerror = (e) => reject(e.target.error)
-      req.onsuccess = (e) => resolve(e.target.result)
+      req.onerror = (e) => {
+        // Prevent default for `BadVersion` and `AbortError` errors, etc.
+        // These are not necessarily reported in console in Chrome but present; see
+        //  https://bugzilla.mozilla.org/show_bug.cgi?id=872873
+        //  http://stackoverflow.com/questions/36225779/aborterror-within-indexeddb-upgradeneeded-event/36266502
+        e.preventDefault()
+        reject(e)
+      }
+      req.onsuccess = (e) => {
+        resolve(e.target.result)
+      }
     }
     openDb()
   })
@@ -39,7 +66,7 @@ export function open(dbName, version, upgradeCallback) {
 /**
  * Delete `db` properly:
  * - close it and wait 100ms to disk flush (Safari, older Chrome, Firefox)
- * - if database is locked, due to inconsistent exectution of `versionchange`,
+ * - if database is locked, due to inconsistent execution of `versionchange`,
  *   try again in 100ms
  *
  * @param {IDBDatabase|String} db
@@ -53,16 +80,53 @@ export function del(db) {
     let isFirst = true
     const delDb = () => {
       const req = idb().deleteDatabase(dbName)
-      req.onblocked = () => {
+      req.onblocked = (e) => {
         if (isFirst) {
           isFirst = false
           setTimeout(delDb, 100)
-        } else {
-          reject(new Error('database is blocked'))
+          return
         }
+        // The following addresses part of https://bugzilla.mozilla.org/show_bug.cgi?id=1220279
+        e = e.newVersion === null || typeof Proxy === 'undefined' ? e : new Proxy(e, { get: (target, name) => {
+          return name === 'newVersion' ? null : target[name]
+        } })
+        const resume = new Promise((res, rej) => {
+          // We overwrite handlers rather than make a new
+          //   delete() since the original request is still
+          //   open and its onsuccess will still fire if
+          //   the user unblocks by closing the blocking
+          //   connection
+          req.onsuccess = (ev) => {
+            // The following are needed currently by PhantomJS: https://github.com/ariya/phantomjs/issues/14141
+            if (!('newVersion' in ev)) {
+              ev.newVersion = e.newVersion
+            }
+
+            if (!('oldVersion' in ev)) {
+              ev.oldVersion = e.oldVersion
+            }
+            res(ev)
+          }
+          req.onerror = (ev) => {
+            ev.preventDefault()
+            rej(ev)
+          }
+        })
+        e.resume = resume
+        reject(e)
       }
-      req.onerror = (e) => reject(e.target.error)
-      req.onsuccess = () => resolve()
+      req.onerror = (e) => {
+        e.preventDefault()
+        reject(e)
+      }
+      req.onsuccess = (e) => {
+        // The following is needed currently by PhantomJS (though we cannot polyfill `oldVersion`): https://github.com/ariya/phantomjs/issues/14141
+        if (!('newVersion' in e)) {
+          e.newVersion = null
+        }
+
+        resolve(e)
+      }
     }
 
     if (typeof db !== 'string') {
