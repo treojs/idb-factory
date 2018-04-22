@@ -40,8 +40,10 @@ function upgradeCallback(e) {
 ```js
 import { open } from 'idb-factory'
 
+(async () => {
+
 // open "mydb1" v1, and create store and index
-const db1 = async open('mydb1', 1, (e) => {
+const db1 = await open('mydb1', 1, (e) => {
   if (e.oldVersion < 1) {
     const store = e.target.result.createObjectStore('books', { keyPath: 'isbn' })
     store.createIndex('by_title', 'title', { unique: true })
@@ -49,27 +51,37 @@ const db1 = async open('mydb1', 1, (e) => {
 })
 
 // version and upgradeCallback are optional.
-const db2 = async open('mydb2')
+const db2 = await open('mydb2')
+
+})();
 ```
 
 ### del(db)
 
 ```js
 import { open, del } from 'idb-factory'
-const db = async open('mydb')
+
+(async () => {
+const db = await open('mydb')
 
 // do something with db
 // ...
 
 // delete existing IDBDatabase instance
-async del(db)
+await del(db)
+
+})();
 ```
 
 ### del(dbName)
 
 ```js
 import { del as deleteDatabase } from 'idb-factory'
-async deleteDatabase('mydb') // delete database by name
+
+(async () => {
+await deleteDatabase('mydb') // delete database by name
+
+})();
 ```
 
 ### cmp(val1, val2)
@@ -109,9 +121,13 @@ if (isSafari8) {
   global.forceIndexedDB = global.shimIndexedDB
 }
 
+(async () => {
+
 // use WebSQL implementation, only in Safari 8,
 // and use IndexedDB in remaining browsers.
-const db = async open('mydb')
+const db = await open('mydb')
+
+})();
 ```
 
 ## LICENSE
