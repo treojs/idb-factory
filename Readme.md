@@ -10,7 +10,7 @@
 
 This module provides consistent, modern API to `window.indexedDB`.
 It's especially useful for test environment, when you need to open/delete database multiple times.
-For implementation details check [just 100 lines of the source](./src/index.js).
+For implementation details see the [150 lines of the source](./src/index.js).
 
 ## Example
 
@@ -33,7 +33,8 @@ function upgradeCallback(e) {
 
 ## API
 
-`open` and `del` return `Promise` and handle `blocked` event by repeating operation after 100ms.
+`open` and `del` each return a `Promise`. See the section on blocking
+events for more details.
 
 ### open(dbName, [version], [upgradeCallback])
 
@@ -54,6 +55,17 @@ const db1 = await open('mydb1', 1, (e) => {
 const db2 = await open('mydb2')
 
 })();
+```
+
+Note that if `upgradeCallback` throws, its own error will be catchable
+by the `open()` promise chain:
+
+```js
+return open('mydb1', 1, function upgradeneeded(/* e */) {
+  throw new Error('Bad callback')
+}).catch((err) => {
+  console.log(err.message) // 'Bad callback'
+})
 ```
 
 ### del(db)
@@ -83,6 +95,13 @@ await deleteDatabase('mydb') // delete database by name
 
 })();
 ```
+
+Note that due to a [browser bug](https://bugzilla.mozilla.org/show_bug.cgi?id=1220279)
+the `oldVersion` property of `del` error events does not work properly in
+Firefox, but we have at least polyfilled its problem with `newVersion`
+(which should be `null`).
+
+We've similarly polyfilled its `success` event (for the sake of PhantomJS).
 
 ### cmp(val1, val2)
 
@@ -128,6 +147,56 @@ if (isSafari8) {
 const db = await open('mydb')
 
 })();
+```
+
+### Blocking events
+
+Genuine `blocked` events (as with errors) can be caught, and `blocked` event
+objects will also be assigned a custom `resume` property promise which can be
+used similarly to the original `open` (or `del`) call (upon successful closing
+of all other open connections).
+
+```js
+import { del as deleteDatabase } from 'idb-factory'
+try {
+  async deleteDatabase('mydb') // delete database by name
+} catch (err) {
+  if (err.type !== 'blocked') {
+    // Handle other `err` errors here
+    return
+  }
+  closeOpenConnections()
+  try {
+    async err.resume
+  } catch (err) {
+    // Handle errors upon resumption
+  }
+}
+```
+
+### Blocking events
+
+Genuine `blocked` events (as with errors) can be caught, and `blocked` event
+objects will also be assigned a custom `resume` property promise which can be
+used similarly to the original `open` (or `del`) call (upon successful closing
+of all other open connections).
+
+```js
+import { del as deleteDatabase } from 'idb-factory'
+try {
+  async deleteDatabase('mydb') // delete database by name
+} catch (err) {
+  if (err.type !== 'blocked') {
+    // Handle other `err` errors here
+    return
+  }
+  closeOpenConnections()
+  try {
+    async err.resume
+  } catch (err) {
+    // Handle errors upon resumption
+  }
+}
 ```
 
 ## LICENSE
